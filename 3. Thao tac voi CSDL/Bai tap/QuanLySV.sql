@@ -52,11 +52,11 @@ VALUES (1, 1, 1, 8, 1),
        (2, 2, 2, 10, 2),
        (3, 3, 3, 12, 1);
 SELECT * FROM Student WHERE StudentName LIKE  'H%';
-SELECT * FROM Class WHERE StartDay LIKE  '%-12-%';
+SELECT * FROM Class WHERE month(StartDay) = 12;
 SELECT * FROM Subject WHERE Credit between 3 and 5;
 
 UPDATE Student  Set ClassID = 2 Where StudentName = 'Hung';
 SELECT S.StudentName, Sub.SubName, M.Mark
 	FROM Subject Sub LEFT JOIN Mark M ON Sub.SubID = M.SubID  LEFT JOIN Student S  ON M.StudentID = S.StudentID
-		ORDER BY M.Mark, S.StudentName;
+		ORDER BY M.Mark DESC, S.StudentName;
 
