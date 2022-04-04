@@ -21,7 +21,7 @@ SELECT K.HO_TEN, count(k.MA_KH) as 'So lan dat phong' FROM hop_dong h join khach
 -- (những khách hàng nào chưa từng đặt phòng cũng phải hiển thị ra)
 
 SELECT KH.MA_KH, KH.HO_TEN, LK.TEN_LK, HD.MA_HD, DV.TEN_DV, HD.NGAY_LAM_HD, HD.NGAY_KET_THUC, 
-	(DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) AS 'Tong tien' FROM khach_hang KH
+	(ifnull(DV.CHI_PHI_THUE,0) + ifnull(HDCT.SO_LUONG*DVDK.GIA,0) ) AS 'Tong tien' FROM khach_hang KH
     LEFT JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
     LEFT JOIN loai_khach LK ON KH.MA_LOAI_KHACH = LK.MA_LK
     LEFT JOIN hop_dong_chi_tiet HDCT ON HD.MA_HD = HDCT.MA_HOP_DONG
@@ -202,49 +202,72 @@ SELECT NV.MA_NV, NV.HO_TEN, TD.TEN_TD, BP.TEN_BP, NV.SDT, count(HD.MA_NHAN_VIEN)
     
 -- Câu 16.	Xóa những Nhân viên chưa từng lập được hợp đồng nào từ năm 2019 đến năm 2021
 
-delete from nhan_vien where Ma_NV not in (
-SELECT NV.MA_NV FROM nhan_vien NV JOIN hop_dong HD ON NV.MA_NV = HD.MA_NHAN_VIEN
-WHERE year(HD.NGAY_LAM_HD) BETWEEN 2019 AND 2021
-);
+delete from nhan_vien where Ma_NV not in 
+		(SELECT xoa.MA_NV FROM(
+				SELECT NV.MA_NV FROM nhan_vien NV JOIN hop_dong HD ON NV.MA_NV = HD.MA_NHAN_VIEN
+				WHERE year(HD.NGAY_LAM_HD) BETWEEN 2019 AND 2021
+				) as xoa);
 
 -- Câu 17.	Cập nhật thông tin những khách hàng có ten_loai_khach từ Platinum lên Diamond, 
 -- chỉ cập nhật những khách hàng đã từng đặt phòng với Tổng Tiền thanh toán trong năm 2021 là lớn hơn 10.000.000 VNĐ
 	
-UPDATE khach_hang  SET MA_LOAI_KHACH =  1 
-	WHERE HO_TEN IN (
-    SELECT KH.MA_KH, KH.HO_TEN, LK.TEN_LK, 
-	(DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) AS 'Tong tien' FROM khach_hang KH
-     JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
-     JOIN loai_khach LK ON KH.MA_LOAI_KHACH = LK.MA_LK
-     JOIN hop_dong_chi_tiet HDCT ON HD.MA_HD = HDCT.MA_HOP_DONG
-     JOIN dich_vu DV ON HD.MA_DICH_VU = DV.MA_DV
-     JOIN dich_vu_di_kem DVDK ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
-    WHERE year(HD.NGAY_LAM_HD) = 2021
-   AND  (DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) > 10000000 AND LK.TEN_LK = 'Platinium'
-   );
+    
+    
+UPDATE khach_hang SET MA_LOAI_KHACH =  1 
+	WHERE Ma_KH IN 
+			(SELECT  tmp.MA_KH, tmp.Tong
+						FROM (
+							SELECT  KH.MA_KH,
+							sum(DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) AS Tong FROM khach_hang KH
+							 JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
+							 JOIN loai_khach LK ON KH.MA_LOAI_KHACH = LK.MA_LK
+							 JOIN hop_dong_chi_tiet HDCT ON HD.MA_HD = HDCT.MA_HOP_DONG
+							 JOIN dich_vu DV ON HD.MA_DICH_VU = DV.MA_DV
+							 JOIN dich_vu_di_kem DVDK ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
+								WHERE year(HD.NGAY_LAM_HD) = 2021 AND LK.MA_LK = 2
+							GROUP BY KH.MA_KH
+							HAVING Tong > 10000000
+							) AS tmp) ;
 
 -- Cau 18.	Xóa những khách hàng có hợp đồng trước năm 2021 (chú ý ràng buộc giữa các bảng).
 
-DELETE FROM khach_hang WHERE HO_TEN IN (
-		SELECT KH.HO_TEN FROM khach_hang KH JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
-		WHERE year(HD.NGAY_LAM_HD) < 2021
-        );
+DELETE FROM khach_hang WHERE HO_TEN IN 
+		(SELECT bangHD.HO_TEN FROM (
+				SELECT KH.HO_TEN FROM khach_hang KH JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
+				WHERE year(HD.NGAY_LAM_HD) < 2021
+				) AS bangHD);
         
 -- Cau 19.	Cập nhật giá cho các dịch vụ đi kèm được sử dụng trên 10 lần trong năm 2020 lên gấp đôi
 
-UPDATE dich_vu_di_kem SET GIA = GIA*2 WHERE
-			(
-			SELECT DVDK.TEN_DV_DK, DVDK.ma_dv_dk, sum(HDCT.SO_LUONG) AS amount
-			FROM dich_vu_di_kem DVDK
-			JOIN hop_dong_chi_tiet HDCT ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
-            JOIN hop_dong HD ON HDCT.MA_HOP_DONG = HD.MA_HD
-            WHERE year(HD.NGAY_LAM_HD) = 2020 
-			GROUP BY DVDK.TEN_DV_DK
-            HAVING amount > 10
-            );
+UPDATE dich_vu_di_kem SET GIA = GIA*2 WHERE ma_dv_dk IN
+			(SELECT bang.ma_dv_dk
+				FROM
+				(
+				SELECT DVDK.TEN_DV_DK, DVDK.ma_dv_dk, sum(HDCT.SO_LUONG) AS amount
+				FROM dich_vu_di_kem DVDK
+				JOIN hop_dong_chi_tiet HDCT ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
+				JOIN hop_dong HD ON HDCT.MA_HOP_DONG = HD.MA_HD
+				WHERE year(HD.NGAY_LAM_HD) = 2020 
+				GROUP BY DVDK.TEN_DV_DK
+				HAVING amount > 10
+				) AS bang);
+                
  -- Cau 20.	Hiển thị thông tin của tất cả các nhân viên và khách hàng có trong hệ thống, thông tin hiển thị 
  -- bao gồm id (ma_nhan_vien, ma_khach_hang), ho_ten, email, so_dien_thoai, ngay_sinh, dia_chi           
 
 SELECT MA_NV as 'ID', HO_TEN, NGAY_SINH, SDT, EMAIL, DIA_CHI FROM nhan_vien
 UNION
 SELECT MA_KH, HO_TEN, NGAY_SINH, SO_DIEN_THOAI, EMAIL, DIA_CHI FROM khach_hang;
+
+-- Cau 21.	Tạo khung nhìn có tên là v_nhan_vien để lấy được thông tin của tất cả các nhân viên 
+-- có địa chỉ là “Hải Châu” và đã từng lập hợp đồng cho một
+-- hoặc nhiều khách hàng bất kì với ngày lập hợp đồng là “12/12/2019”.
+
+CREATE VIEW v_nhan_vien AS SELECT * FROM nhan_vien WHERE DIA_CHI LIKE '%Hải Châu%' AND 
+	(SELECT NV.HO_TEN FROM nhan_vien NV JOIN hop_dong HD ON NV.MA_NV = HD.MA_NHAN_VIEN
+    WHERE HD.NGAY_LAM_HD = '2019-12-12'
+    );
+    
+    SELECT * FROM v_nhan_vien;
+    DROP VIEW v_nhan_vien;
+    
