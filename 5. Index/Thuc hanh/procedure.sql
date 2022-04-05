@@ -1,40 +1,27 @@
-DELIMITER //
-drop procedure if exists getStudentId;
-CREATE PROCEDURE getStudentId
+USE QuanLyHSSV;
 
-(IN cusNum INT(11))
+DELIMITER //
+
+CREATE PROCEDURE findAllCustomers()
 
 BEGIN
 
-  SELECT * FROM Student WHERE StudentName = 'Hung';
+  SELECT * FROM customers;
 
 END //
 
 DELIMITER ;
-call getStudentId(2);
+
+call findAllCustomers();
 
 
 DELIMITER //
+DROP PROCEDURE IF EXISTS findAllCustomers//
 
-CREATE PROCEDURE GetCustomersCountByCity(
-
-    IN  in_city VARCHAR(50),
-
-    OUT total INT
-
-)
+CREATE PROCEDURE findAllCustomers()
 
 BEGIN
 
-    SELECT COUNT(customerNumber)
+SELECT * FROM customers where customerNumber = 175;
 
-    INTO total
-
-    FROM customers
-
-    WHERE city = in_city;
-
-END//
-
-DELIMITER ;
-
+END //
