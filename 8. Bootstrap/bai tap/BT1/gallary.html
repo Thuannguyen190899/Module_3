@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Gallary</title>
+    <style>
+        div.gallery {
+            border: 1px solid #ccc;
+        }
+
+        div.gallery:hover {
+            border: 1px solid #777;
+        }
+
+        div.gallery img {
+            width: 100%;
+            height: auto;
+        }
+
+        div.desc {
+            padding: 15px;
+            text-align: center;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .responsive {
+            padding: 0 6px;
+            float: left;
+            width: 24.99999%;
+        }
+
+        @media only screen and (max-width: 700px){
+            .responsive {
+                width: 49.99999%;
+                margin: 6px 0;
+            }
+        }
+
+        @media only screen and (max-width: 500px){
+            .responsive {
+                width: 100%;
+            }
+        }
+
+        .clearfix:after {
+            content: "";
+            display: table;
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Responsive Image Gallery</h2>
+<h4>Resize the browser window to see the effect</h4>
+
+<div class="responsive">
+    <div class="gallery">
+        <a target="_blank" href="nature1.jpg">
+            <img src="nature1.jpg" alt="Trolltunga Norway" width="300" height="200">
+        </a>
+        <div class="desc">Waterfalls form when streams or rivers flow from a steep formation of earth.</div>
+    </div>
+</div>
+
+
+<div class="responsive">
+    <div class="gallery">
+        <a target="_blank" href="nature2.jpg">
+            <img src="nature2.jpg" alt="Forest" width="600" height="400">
+        </a>
+        <div class="desc">It still doesn’t hurt to take a note from the old proverb: “take time to smell the roses.” </div>
+    </div>
+</div>
+
+<div class="responsive">
+    <div class="gallery">
+        <a target="_blank" href="nature3.jpg">
+            <img src="nature3.jpg" alt="Northern Lights" width="600" height="400">
+        </a>
+        <div class="desc">There is no question that Earth has been a giving planet. We have needed to survive.</div>
+    </div>
+</div>
+
+<div class="responsive">
+    <div class="gallery">
+        <a target="_blank" href="nature4.jpg">
+            <img src="nature4.jpg" alt="Mountains" width="600" height="400">
+        </a>
+        <div class="desc">Nature is the world around us. We beings depend on nature every time and for everything.</div>
+    </div>
+</div>
+
+<div class="clearfix"></div>
+
+<div style="padding:6px; text-align: center">
+    <p>Với các màn hình có độ rộng lớn hơn 700px thì hiển thị 4 ảnh trên cùng một dòng.<br/>
+        Với các màn hình nhỏ hơn 700px thì hiển thị 2 ảnh trên cùng một dòng.<br/>
+        Với các màn hình nhỏ hơn 500px thì hiển thị 1 ảnh trên một dòng.</p>
+</div>
+
+</body>
+</html>
