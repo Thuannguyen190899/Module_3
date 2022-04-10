@@ -218,12 +218,12 @@ UPDATE khach_hang SET MA_LOAI_KHACH =  1
 			(SELECT  tmp.MA_KH, tmp.Tong
 						FROM (
 							SELECT  KH.MA_KH,
-							sum(DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) AS Tong FROM khach_hang KH
-							 JOIN hop_dong HD ON KH.MA_KH = HD.MA_KHACH_HANG
-							 JOIN loai_khach LK ON KH.MA_LOAI_KHACH = LK.MA_LK
-							 JOIN hop_dong_chi_tiet HDCT ON HD.MA_HD = HDCT.MA_HOP_DONG
-							 JOIN dich_vu DV ON HD.MA_DICH_VU = DV.MA_DV
-							 JOIN dich_vu_di_kem DVDK ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
+							sum(DV.CHI_PHI_THUE + HDCT.SO_LUONG*DVDK.GIA) AS Tong FROM  hop_dong HD 
+							 LEFT JOIN khach_hang KH ON KH.MA_KH = HD.MA_KHACH_HANG
+							 LEFT JOIN loai_khach LK ON KH.MA_LOAI_KHACH = LK.MA_LK
+							 LEFT JOIN hop_dong_chi_tiet HDCT ON HD.MA_HD = HDCT.MA_HOP_DONG
+							LEFT JOIN dich_vu DV ON HD.MA_DICH_VU = DV.MA_DV
+							 LEFT JOIN dich_vu_di_kem DVDK ON HDCT.MA_DICH_VU_DK = DVDK.ma_dv_dk
 								WHERE year(HD.NGAY_LAM_HD) = 2021 AND LK.MA_LK = 2
 							GROUP BY KH.MA_KH
 							HAVING Tong > 10000000
@@ -271,3 +271,8 @@ CREATE VIEW v_nhan_vien AS SELECT * FROM nhan_vien WHERE DIA_CHI LIKE '%Hải Ch
     SELECT * FROM v_nhan_vien;
     DROP VIEW v_nhan_vien;
     
+-- Cau 22.	Thông qua khung nhìn v_nhan_vien thực hiện cập nhật địa chỉ thành “Liên Chiểu” 
+-- đối với tất cả các nhân viên được nhìn thấy bởi khung nhìn này.
+
+UPDATE  v_nhan_vien SET DIA_CHI = 'Liên Chiểu';
+
